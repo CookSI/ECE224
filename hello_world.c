@@ -29,9 +29,9 @@
 int flag;
 
 //Function Declaration
-//void interrupt();
-static void interrupt(void* context, alt_u32 id)
+void interrupt();
 void polling();
+static void interrupt_init(void* context, alt_u32 id);
 
 int main(){
 
@@ -73,24 +73,19 @@ int main(){
 }
 
 //ISR
-static void interrupt(void* context, alt_u32 id){
-	alt_irq_register( BUTTON_PIO_IRQ, (void *)0, interrupt);
-	//ISR code
-
-	while(){
-
-	}
-
-	//Clear interrupt code
+static void interrupt_init(void* context, alt_u32 id){
+	IOWR( RESPONSE_OUT_BASE, 0, 1);
+	IOWR( RESPONSE_OUT_BASE, 0, 0);
+	IOWR( STIMULUS_IN_BASE, 3, 0x0);
 }
 
-
-
-////Interrupt Code
-//void interrupt(){
-//	//Check if EGM is active
-//		//background task call
-//}
+//Interrupt Code
+void interrupt(){
+	alt_irq_register( BUTTON_PIO_IRQ, (void *)0, interrupt_init);
+	IOWR( STIMULUS_IN_BASE, 2, 1);
+	//Check if EGM is active
+		//background task call
+}
 
 
 //Polling Code
