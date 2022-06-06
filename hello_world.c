@@ -90,12 +90,13 @@ void interrupt(){
 	int egm_missed;
 	int egm_multi;
 
-	for (int period = 2; period < 5000; period+=2) {
+	int period;
+	for (period = 2; period < 5000; period+=2) {
 
-		int egm_enable = IOWR(EGM_BASE, 0, 0);
-		int egm_period = IOWR(EGM_BASE, 2, period);
-		int egm_pulse_width = IOWR(EGM_BASE, 3, period/2);
-		int egm_enable = IOWR(EGM_BASE, 0, 1);
+		IOWR(EGM_BASE, 0, 0);
+		IOWR(EGM_BASE, 2, period);
+		IOWR(EGM_BASE, 3, period/2);
+		IOWR(EGM_BASE, 0, 1);
 		//egm_init(period, egm_period, egm_pulse_width, egm_enable);
 		egm_busy = IORD(EGM_BASE, 1);
 		while(egm_busy == 1) {
