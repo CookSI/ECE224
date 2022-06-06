@@ -27,28 +27,23 @@
 
 //Global Variables
 int flag;
+int counter = 0;
 
 //Function Declaration
 void interrupt();
 void polling();
+int background();
 static void interrupt_init(void* context, alt_u32 id);
+void egm_init(int period, int egm_period, int egm_pulse_width, int egm_enable);
 
 int main(){
 
 	//Initial Registers & Vars
-	int egm_enable;
-	int egm_busy;
-	int egm_period;
-	int egm_pulse_width;
-	int egm_average_latency;
-	int egm_missed;
-	int egm_multi;
 
-	int counter = 0;
 
 	int mode = IORD(SWITCH_PIO_BASE, 0) & 0x01;
 	printf("Mode is: %d\n", mode);
-	int mode = 0; //change later
+	mode = 0;
 	//Read Switch PIO (0 - Interrupt, 1 - Polling)
 	if (mode == 1){
 		polling();
@@ -79,17 +74,63 @@ static void interrupt_init(void* context, alt_u32 id){
 	IOWR( STIMULUS_IN_BASE, 3, 0x0);
 }
 
+
 //Interrupt Code
 void interrupt(){
+	//Interrupt initialize
 	alt_irq_register( BUTTON_PIO_IRQ, (void *)0, interrupt_init);
+	//ENABLE the Button_PIO_IR
 	IOWR( STIMULUS_IN_BASE, 2, 1);
+
+	//int egm_enable;
+	int egm_busy;
+	//int egm_period;
+	//int egm_pulse_width;
+	int egm_average_latency;
+	int egm_missed;
+	int egm_multi;
+
+	for (int period = 2; period < 5000; period+=2) {
+
+		int egm_enable = IOWR(EGM_BASE, 0, 0);
+		int egm_period = IOWR(EGM_BASE, 2, period);
+		int egm_pulse_width = IOWR(EGM_BASE, 3, period/2);
+		int egm_enable = IOWR(EGM_BASE, 0, 1);
+		//egm_init(period, egm_period, egm_pulse_width, egm_enable);
+		egm_busy = IORD(EGM_BASE, 1);
+		while(egm_busy == 1) {
+			background();
+			counter++;
+		}
+		egm_average_latency = IORD(EGM_BASE, 4);
+		egm_missed = IORD(EGM_BASE, 5);
+		egm_multi = IORD(EGM_BASE, 6);
+		printf("Average Latency: %d\nMissed: %d\nMulti: %d\n", egm_average_latency, egm_missed, egm_multi);
+	}
 	//Check if EGM is active
 		//background task call
 }
 
+//void egm_init(int period, int egm_period, int egm_pulse_width, int egm_enable){
+//	egm_period = IOWR(EGM_BASE, 2, period);
+//	egm_pulse_width = IOWR(EGM_BASE, 3, period/2);
+//	egm_enable = IOWR(EGM_BASE, 0, 1);
+//}
 
 //Polling Code
 void polling(){
 
+}
+
+int background(){
+	int j;
+	int x = 0;
+	int grainsize = 4;
+	int g_taskProcessed = 0;
+
+	for(j = 0; j < grainsize; j++) {
+		g_taskProcessed++;
+	}
+	return x;
 }
 
