@@ -34,7 +34,7 @@ void interrupt();
 void polling();
 int background();
 static void interrupt_init(void* context, alt_u32 id);
-void egm_init(int period, int egm_period, int egm_pulse_width, int egm_enable);
+//void egm_init(int period, int egm_period, int egm_pulse_width, int egm_enable);
 
 int main(){
 
@@ -43,12 +43,14 @@ int main(){
 
 	int mode = IORD(SWITCH_PIO_BASE, 0) & 0x01;
 	printf("Mode is: %d\n", mode);
-	mode = 0;
+
 	//Read Switch PIO (0 - Interrupt, 1 - Polling)
+	
+	
 	if (mode == 1){
 		polling();
 	}
-	else {
+	else if (mode == 0) {
 		interrupt();
 	}
 
@@ -100,7 +102,9 @@ void interrupt(){
 		//egm_init(period, egm_period, egm_pulse_width, egm_enable);
 		egm_busy = IORD(EGM_BASE, 1);
 		while(egm_busy == 1) {
+			//led open
 			background();
+			//led close
 			counter++;
 		}
 		egm_average_latency = IORD(EGM_BASE, 4);
@@ -108,8 +112,7 @@ void interrupt(){
 		egm_multi = IORD(EGM_BASE, 6);
 		printf("Average Latency: %d\nMissed: %d\nMulti: %d\n", egm_average_latency, egm_missed, egm_multi);
 	}
-	//Check if EGM is active
-		//background task call
+
 }
 
 //void egm_init(int period, int egm_period, int egm_pulse_width, int egm_enable){
