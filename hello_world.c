@@ -45,26 +45,19 @@ int main(){
 	printf("Mode is: %d\n", mode);
 
 	//Read Switch PIO (0 - Interrupt, 1 - Polling)
-	
-	
+
 	if (mode == 1){
+		printf("Polling Mode Selected\n");
+		//push button
+		//while (IOWR(BUTTON_PIO_BASE,0) == 1);
 		polling();
 	}
 	else if (mode == 0) {
+		printf("Interrupt Mode Selected\n");
+		//while (IOWR(BUTTON_PIO_BASE,0) == 1);
+
 		interrupt();
 	}
-
-	//Make BG tasks call
-
-	//Start EGM for each tests run
-
-	//Check EGM for its test run status
-
-	//Print results at end of each test
-
-	//Update registers for next test run
-
-	//Determine if experiment is done
 
 	return 0;
 }
@@ -79,21 +72,21 @@ static void interrupt_init(void* context, alt_u32 id){
 
 //Interrupt Code
 void interrupt(){
+	// Clear Pre-existing interrupt
+	IOWR(STIMULUS_IN_BASE, 3, 0);
 	//Interrupt initialize
-	alt_irq_register( BUTTON_PIO_IRQ, (void *)0, interrupt_init);
+	alt_irq_register( STIMULUS_IN_IRQ, (void *)0, interrupt_init);
 	//ENABLE the Button_PIO_IR
 	IOWR( STIMULUS_IN_BASE, 2, 1);
 
-	//int egm_enable;
 	int egm_busy;
-	//int egm_period;
-	//int egm_pulse_width;
 	int egm_average_latency;
 	int egm_missed;
 	int egm_multi;
 
-	int period;
-	for (period = 2; period < 5000; period+=2) {
+	int period = 65;
+	//for (period = 2; period < 5000; period+=2) {
+	while (period <= 5000){
 
 		IOWR(EGM_BASE, 0, 0);
 		IOWR(EGM_BASE, 2, period);
@@ -101,17 +94,25 @@ void interrupt(){
 		IOWR(EGM_BASE, 0, 1);
 		//egm_init(period, egm_period, egm_pulse_width, egm_enable);
 		egm_busy = IORD(EGM_BASE, 1);
-		while(egm_busy == 1) {
-			//led open
+		while(egm_busy) {
+			//led 0 on
+			IOWR(LED_PIO_BASE, 0, 0x01);
 			background();
-			//led close
+			//led 0 off
+			IOWR(LED_PIO_BASE, 0, 0x00);
 			counter++;
 		}
 		egm_average_latency = IORD(EGM_BASE, 4);
 		egm_missed = IORD(EGM_BASE, 5);
 		egm_multi = IORD(EGM_BASE, 6);
-		printf("Average Latency: %d\nMissed: %d\nMulti: %d\n", egm_average_latency, egm_missed, egm_multi);
+		//printf("Average Latency: %d\nMissed: %d\nMulti: %d\n", egm_average_latency, egm_missed, egm_multi);
+		printf("%d\n", period);
+
+		IOWR(EGM_BASE, 0, 1);
+		period += 2;
 	}
+
+	printf("Done");
 
 }
 
@@ -135,6 +136,6 @@ int background(){
 	for(j = 0; j < grainsize; j++) {
 		g_taskProcessed++;
 	}
+
 	return x;
 }
-
